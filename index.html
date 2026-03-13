@@ -1,0 +1,1409 @@
+<html lang="zh-CN"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADHD日程管理 - 专注助手</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#a8a8a8', // 浅灰
+                        secondary: '#d3d3d3', // 中灰
+                        accent: '#f5f5f5', // 白色
+                        neutral: '#696969', // 深灰
+                        'neutral-dark': '#404040', // 更深的灰
+                        'wood-brown': '#8b7355', // 木色
+                        'wood-dark': '#654321', // 深木色
+                    },
+                    fontFamily: {
+                        pixel: ['VT323', 'monospace', 'system-ui'],
+                    },
+                    boxShadow: {
+                        'pixel': '4px 4px 0px rgba(0, 0, 0, 0.2)',
+                        'pixel-sm': '2px 2px 0px rgba(0, 0, 0, 0.2)',
+                    },
+                    animation: {
+                        'bounce-slow': 'bounce 2s infinite',
+                        'pulse-slow': 'pulse 3s infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .pixel-borders {
+                box-shadow: 
+                    -4px 0 0 0 #000,
+                    4px 0 0 0 #000,
+                    0 -4px 0 0 #000,
+                    0 4px 0 0 #000;
+                image-rendering: pixelated;
+            }
+            
+            .pixel-borders-sm {
+                box-shadow: 
+                    -2px 0 0 0 #000,
+                    2px 0 0 0 #000,
+                    0 -2px 0 0 #000,
+                    0 2px 0 0 #000;
+                image-rendering: pixelated;
+            }
+            
+            .text-shadow {
+                text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.3);
+            }
+            
+            .text-shadow-sm {
+                text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.3);
+            }
+            
+            .bg-pixel {
+                image-rendering: pixelated;
+                background-size: cover;
+                background-position: center;
+            }
+            
+            .btn-pixel {
+                @apply relative px-4 py-2 font-pixel text-lg font-bold transition-transform active:translate-y-1 active:translate-x-1;
+                box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.3);
+            }
+            
+            .btn-pixel:active {
+                box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.3);
+            }
+            
+            .card-pixel {
+                @apply relative bg-white bg-opacity-20 backdrop-blur-md rounded-none border-2 border-black;
+                box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2);
+            }
+            
+            .input-pixel {
+                @apply border-2 border-black bg-white px-3 py-2 font-pixel focus:outline-none focus:ring-2 focus:ring-neutral-dark;
+                box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.1);
+            }
+            
+            .checkbox-pixel {
+                @apply w-5 h-5 border-2 border-black rounded-none appearance-none bg-white checked:bg-neutral-dark checked:border-neutral-dark focus:outline-none;
+            }
+            
+            .checkbox-pixel:checked {
+                background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
+                background-size: 100% 100%;
+                background-position: center;
+                background-repeat: no-repeat;
+            }
+        }
+    </style>
+    
+    <!-- 导入像素字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=VT323&amp;display=swap" rel="stylesheet">
+</head>
+<body class="font-pixel bg-accent min-h-screen overflow-x-hidden">
+    <!-- 主容器 -->
+    <div id="app" class="relative min-h-screen pb-20">
+        <!-- 背景图 -->
+        <div class="fixed inset-0 z-0 opacity-50 bg-pixel" style="background-image: url('https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/045a1a8d5fd046ddba9549d34404fdf2~tplv-a9rns2rl98-image.image?lk3s=8e244e95&amp;rcl=20260313192839CD2619F58FA81637784A&amp;rrcfp=f06b921b&amp;x-expires=1775993371&amp;x-signature=caSFmF5JJP53p%2BUXrQHLpnVW9Pg%3D')"></div>
+        
+        <!-- 内容区域 -->
+        <div class="relative z-10 container mx-auto px-4 py-6">
+            <!-- 页面容器 -->
+            <div id="page-container">
+                <!-- 首页 -->
+                <div id="home-page" class="page active">
+                    <!-- 顶部区域：NPC和问候语 -->
+                    <div class="flex items-center mb-6">
+                        <div class="w-16 h-16 mr-4 overflow-hidden rounded-full border-4 border-white pixel-borders-sm">
+                            <img src="https://p9-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/68483cc02d474a33a415d8c563786beb~tplv-a9rns2rl98-image.image?lk3s=8e244e95&amp;rcl=20260313192839CD2619F58FA81637784A&amp;rrcfp=f06b921b&amp;x-expires=1775993380&amp;x-signature=vybS5KY9lz1xWrnY6nc%2BG%2B4f7Ik%3D" alt="NPC头像" class="w-full h-full object-cover animate-pulse-slow">
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-shadow" id="npc-name">
+</h2>
+                            <p class="text-xl text-shadow-sm" id="greeting">早上好！今天也要加油哦！</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 主要内容区域：日历和待办事项 -->
+                    <div class="flex flex-col md:flex-row gap-6">
+                        <!-- 左侧：日历 -->
+                        <div class="w-full md:w-1/3 card-pixel p-4">
+                            <h3 class="text-xl font-bold mb-4 text-center">日历</h3>
+                            <div id="calendar" class="grid grid-cols-7 gap-1 text-center">
+                                <!-- 星期标题 -->
+                                <div class="font-bold">日</div>
+                                <div class="font-bold">一</div>
+                                <div class="font-bold">二</div>
+                                <div class="font-bold">三</div>
+                                <div class="font-bold">四</div>
+                                <div class="font-bold">五</div>
+                                <div class="font-bold">六</div>
+                                
+                                <!-- 日历天数将通过JS动态生成 -->
+                            </div>
+                        </div>
+                        
+                        <!-- 右侧：待办事项 -->
+                        <div class="w-full md:w-2/3 card-pixel p-4">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-bold">今日待办</h3>
+                                <button id="add-task-btn" class="btn-pixel bg-primary hover:bg-opacity-80">
+                                    <i class="fa fa-plus mr-1"></i> 添加
+                                </button>
+                            </div>
+                            
+                            <ul id="todo-list" class="space-y-3">
+                                <!-- 待办事项将通过JS动态生成 -->
+                            </ul>
+                            
+                            <!-- 添加任务的表单（默认隐藏） -->
+                            <div id="add-task-form" class="mt-4 hidden">
+                                <div class="flex gap-2">
+                                    <input type="text" id="new-task-input" class="input-pixel flex-grow" placeholder="输入新任务...">
+                                    <button id="save-task-btn" class="btn-pixel bg-neutral hover:bg-opacity-80">
+                                        保存
+                                    </button>
+                                    <button id="cancel-task-btn" class="btn-pixel bg-secondary hover:bg-opacity-80">
+                                        取消
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 下方：打卡模块 -->
+                    <div class="mt-6 card-pixel p-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl font-bold">打卡</h3>
+                            <button id="add-checkin-btn" class="btn-pixel bg-primary hover:bg-opacity-80 text-sm">
+                                <i class="fa fa-plus mr-1"></i> 添加项目
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="checkin-container">
+                            <!-- 打卡项目将通过JS动态生成 -->
+                        </div>
+                        
+                        <!-- 添加打卡项目的表单（默认隐藏） -->
+                        <div id="add-checkin-form" class="mt-4 hidden">
+                            <div class="flex gap-2">
+                                <input type="text" id="new-checkin-input" class="input-pixel flex-grow" placeholder="输入新打卡项目...">
+                                <button id="save-checkin-btn" class="btn-pixel bg-neutral hover:bg-opacity-80">
+                                    保存
+                                </button>
+                                <button id="cancel-checkin-btn" class="btn-pixel bg-secondary hover:bg-opacity-80">
+                                    取消
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 日记模块 -->
+                    <div class="mt-6 card-pixel p-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl font-bold">今日日记</h3>
+                            <button id="save-diary-btn" class="btn-pixel bg-primary hover:bg-opacity-80">
+                                <i class="fa fa-save mr-1"></i> 保存
+                            </button>
+                        </div>
+                        <textarea id="diary-input" class="input-pixel w-full h-32 resize-none" placeholder="记录今天的心情和收获..."></textarea>
+                    </div>
+                </div>
+                
+                <!-- 计时页面 -->
+                <div id="timer-page" class="page hidden">
+                    <div class="card-pixel p-6 text-center">
+                        <h2 class="text-2xl font-bold mb-6">专注计时</h2>
+                        
+                        <!-- 计时模式选择 -->
+                        <div class="flex justify-center gap-4 mb-8">
+                            <button class="timer-mode-btn btn-pixel bg-primary active" data-mode="pomodoro">番茄钟</button>
+                            <button class="timer-mode-btn btn-pixel bg-neutral" data-mode="countdown">倒计时</button>
+                            <button class="timer-mode-btn btn-pixel bg-secondary" data-mode="stopwatch">正计时</button>
+                        </div>
+                        
+                        <!-- 计时器显示 -->
+                        <div class="mb-8">
+                            <div id="timer-display" class="text-6xl font-bold text-shadow">25:00</div>
+                            <div id="timer-label" class="text-xl mt-2">专注时间</div>
+                        </div>
+                        
+                        <!-- 倒计时设置（默认隐藏） -->
+                        <div id="countdown-settings" class="mb-8 hidden">
+                            <div class="flex justify-center gap-4 items-center">
+                                <div>
+                                    <label for="countdown-minutes" class="block mb-1">分钟</label>
+                                    <input type="number" id="countdown-minutes" class="input-pixel w-20 text-center" min="1" max="120" value="25">
+                                </div>
+                                <div>
+                                    <label for="countdown-seconds" class="block mb-1">秒</label>
+                                    <input type="number" id="countdown-seconds" class="input-pixel w-20 text-center" min="0" max="59" value="0">
+                                </div>
+                                <button id="apply-countdown" class="btn-pixel bg-neutral hover:bg-opacity-80 self-end">
+                                    应用
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- 控制按钮 -->
+                        <div class="flex justify-center gap-4">
+                            <button id="start-timer" class="btn-pixel bg-primary hover:bg-opacity-80">
+                                <i class="fa fa-play mr-1"></i> 开始
+                            </button>
+                            <button id="pause-timer" class="btn-pixel bg-secondary hover:bg-opacity-80 hidden">
+                                <i class="fa fa-pause mr-1"></i> 暂停
+                            </button>
+                            <button id="reset-timer" class="btn-pixel bg-neutral hover:bg-opacity-80">
+                                <i class="fa fa-refresh mr-1"></i> 重置
+                            </button>
+                        </div>
+                        
+                        <!-- 白噪音选择 -->
+                        <div class="mt-8">
+                            <h3 class="text-lg font-bold mb-3">白噪音</h3>
+                            <div class="flex flex-wrap justify-center gap-3">
+                                <button class="sound-btn btn-pixel bg-wood-brown hover:bg-opacity-80" data-sound="rain">
+                                    <i class="fa fa-cloud-rain mr-1"></i> 雨声
+                                </button>
+                                <button class="sound-btn btn-pixel bg-wood-brown hover:bg-opacity-80" data-sound="wind">
+                                    <i class="fa fa-wind mr-1"></i> 风声
+                                </button>
+                                <button class="sound-btn btn-pixel bg-wood-brown hover:bg-opacity-80" data-sound="cafe">
+                                    <i class="fa fa-coffee mr-1"></i> 咖啡馆
+                                </button>
+                                <button class="sound-btn btn-pixel bg-wood-brown hover:bg-opacity-80" data-sound="forest">
+                                    <i class="fa fa-tree mr-1"></i> 森林
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- NPC页面 -->
+                <div id="npc-page" class="page hidden">
+                    <div class="card-pixel p-6 text-center">
+                        <h2 class="text-2xl font-bold mb-6">我的伙伴</h2>
+                        
+                        <!-- NPC形象 -->
+                        <div class="mb-8 flex justify-center">
+                            <div class="w-48 h-48 relative">
+                                <img src="https://p9-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/68483cc02d474a33a415d8c563786beb~tplv-a9rns2rl98-image.image?lk3s=8e244e95&amp;rcl=20260313192839CD2619F58FA81637784A&amp;rrcfp=f06b921b&amp;x-expires=1775993380&amp;x-signature=vybS5KY9lz1xWrnY6nc%2BG%2B4f7Ik%3D" alt="NPC形象" class="w-full h-full object-contain animate-bounce-slow">
+                            </div>
+                        </div>
+                        
+                        <!-- NPC对话 -->
+                        <div class="card-pixel p-4 mb-6 max-w-md mx-auto bg-white bg-opacity-90">
+                            <p id="npc-dialogue" class="text-lg">你好！我是小明，你的专注伙伴。今天有什么计划吗？</p>
+                        </div>
+                        
+                        <!-- 互动按钮 -->
+                        <div class="grid grid-cols-3 gap-4 max-w-md mx-auto">
+                            <button class="npc-action-btn btn-pixel bg-primary hover:bg-opacity-80" data-action="encourage">
+                                <i class="fa fa-heart mr-1"></i> 鼓励
+                            </button>
+                            <button class="npc-action-btn btn-pixel bg-secondary hover:bg-opacity-80" data-action="supervise">
+                                <i class="fa fa-eye mr-1"></i> 监督
+                            </button>
+                            <button class="npc-action-btn btn-pixel bg-neutral hover:bg-opacity-80" data-action="chat">
+                                <i class="fa fa-comment mr-1"></i> 对话
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 商店页面 -->
+                <div id="shop-page" class="page hidden">
+                    <div class="card-pixel p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold">商店</h2>
+                            <div class="flex items-center">
+                                <img src="https://p11-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/d0631d9849a74e47b5bb1aa3c5452d0d~tplv-a9rns2rl98-image.image?lk3s=8e244e95&amp;rcl=20260313192839CD2619F58FA81637784A&amp;rrcfp=f06b921b&amp;x-expires=1775993394&amp;x-signature=EkChl%2BjwZONp33NN4UnUl7O9aog%3D" alt="金币" class="w-8 h-8 mr-2">
+                                <span class="text-xl font-bold" id="user-coins">100</span>
+                            </div>
+                        </div>
+                        
+                        <!-- 商品分类 -->
+                        <div class="flex flex-wrap gap-2 mb-6">
+                            <button class="shop-category-btn btn-pixel bg-primary active" data-category="all">全部</button>
+                            <button class="shop-category-btn btn-pixel bg-secondary" data-category="sound">白噪音</button>
+                            <button class="shop-category-btn btn-pixel bg-wood-brown" data-category="timer">计时皮肤</button>
+                            <button class="shop-category-btn btn-pixel bg-neutral" data-category="custom">自定义</button>
+                        </div>
+                        
+                        <!-- 添加自定义商品按钮 -->
+                        <div class="mb-6 text-center">
+                            <button id="add-custom-item-btn" class="btn-pixel bg-primary hover:bg-opacity-80">
+                                <i class="fa fa-plus mr-1"></i> 添加自定义商品
+                            </button>
+                        </div>
+                        
+                        <!-- 自定义商品表单（默认隐藏） -->
+                        <div id="custom-item-form" class="card-pixel p-4 mb-6 hidden">
+                            <h3 class="text-lg font-bold mb-3">添加自定义商品</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="custom-item-name" class="block mb-1">商品名称</label>
+                                    <input type="text" id="custom-item-name" class="input-pixel w-full" placeholder="输入商品名称">
+                                </div>
+                                <div>
+                                    <label for="custom-item-price" class="block mb-1">价格</label>
+                                    <input type="number" id="custom-item-price" class="input-pixel w-full" min="1" placeholder="输入价格">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label for="custom-item-description" class="block mb-1">描述</label>
+                                    <textarea id="custom-item-description" class="input-pixel w-full h-20 resize-none" placeholder="输入商品描述"></textarea>
+                                </div>
+                                <div class="md:col-span-2 flex justify-end gap-2">
+                                    <button id="save-custom-item-btn" class="btn-pixel bg-primary hover:bg-opacity-80">保存</button>
+                                    <button id="cancel-custom-item-btn" class="btn-pixel bg-secondary hover:bg-opacity-80">取消</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 商品列表 -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="shop-items">
+                            <!-- 商品将通过JS动态生成 -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 个人中心页面 -->
+                <div id="profile-page" class="page hidden">
+                    <div class="card-pixel p-6">
+                        <div class="flex flex-col items-center mb-6">
+                            <div class="w-24 h-24 rounded-full overflow-hidden border-4 border-white pixel-borders-sm mb-4">
+                                <img src="https://p11-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/d0631d9849a74e47b5bb1aa3c5452d0d~tplv-a9rns2rl98-image.image?lk3s=8e244e95&amp;rcl=20260313192839CD2619F58FA81637784A&amp;rrcfp=f06b921b&amp;x-expires=1775993394&amp;x-signature=EkChl%2BjwZONp33NN4UnUl7O9aog%3D" alt="用户头像" class="w-full h-full object-cover">
+                            </div>
+                            <h2 class="text-2xl font-bold" id="user-name">用户</h2>
+                            <p class="text-neutral-dark" id="user-level">等级 1</p>
+                        </div>
+                        
+                        <!-- 统计数据 -->
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div class="card-pixel p-4 text-center">
+                                <h3 class="text-lg font-bold mb-2">金币</h3>
+                                <p class="text-2xl" id="profile-coins">100</p>
+                            </div>
+                            <div class="card-pixel p-4 text-center">
+                                <h3 class="text-lg font-bold mb-2">任务完成率</h3>
+                                <p class="text-2xl" id="task-completion">75%</p>
+                            </div>
+                            <div class="card-pixel p-4 text-center">
+                                <h3 class="text-lg font-bold mb-2">总专注时长</h3>
+                                <p class="text-2xl" id="total-focus-time">10小时</p>
+                            </div>
+                            <div class="card-pixel p-4 text-center">
+                                <h3 class="text-lg font-bold mb-2">连续打卡</h3>
+                                <p class="text-2xl" id="streak-days">3天</p>
+                            </div>
+                        </div>
+                        
+                        <!-- 专注时长统计 -->
+                        <div class="card-pixel p-4 mb-6">
+                            <h3 class="text-xl font-bold mb-4">专注时长统计</h3>
+                            <div class="grid grid-cols-3 gap-2 text-center">
+                                <div class="bg-primary bg-opacity-30 p-2">
+                                    <p class="text-sm">今日</p>
+                                    <p class="text-xl font-bold" id="today-focus">2小时</p>
+                                </div>
+                                <div class="bg-neutral bg-opacity-30 p-2">
+                                    <p class="text-sm">本周</p>
+                                    <p class="text-xl font-bold" id="week-focus">10小时</p>
+                                </div>
+                                <div class="bg-secondary bg-opacity-30 p-2">
+                                    <p class="text-sm">本月</p>
+                                    <p class="text-xl font-bold" id="month-focus">40小时</p>
+                                </div>
+                            </div>
+                            <div class="mt-4 h-40 bg-white bg-opacity-50 rounded" id="focus-chart">
+                                <!-- 图表将通过JS生成 -->
+                                <canvas id="focus-chart-canvas"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- 日记回顾 -->
+                        <div class="card-pixel p-4">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-bold">日记回顾</h3>
+                                <select id="diary-selector" class="input-pixel">
+                                    <!-- 日记选项将通过JS动态生成 -->
+                                </select>
+                            </div>
+                            <div id="diary-content" class="bg-white bg-opacity-50 p-4 min-h-32">
+                                <p class="text-gray-500 text-center">选择一篇日记查看内容</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 底部导航栏 -->
+        <nav class="fixed bottom-0 left-0 right-0 bg-white bg-opacity-90 border-t-2 border-black z-20">
+            <div class="container mx-auto">
+                <div class="flex justify-around">
+                    <button class="nav-btn flex flex-col items-center py-3 px-6 w-1/5 active" data-page="home-page">
+                        <img src="https://p11-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/d0631d9849a74e47b5bb1aa3c5452d0d~tplv-a9rns2rl98-image.image?lk3s=8e244e95&amp;rcl=20260313192839CD2619F58FA81637784A&amp;rrcfp=f06b921b&amp;x-expires=1775993394&amp;x-signature=EkChl%2BjwZONp33NN4UnUl7O9aog%3D" alt="首页" class="w-8 h-8 mb-1">
+                        <span class="text-sm">首页</span>
+                    </button>
+                    <button class="nav-btn flex flex-col items-center py-3 px-6 w-1/5" data-page="npc-page">
+                        <img src="https://p11-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/d0631d9849a74e47b5bb1aa3c5452d0d~tplv-a9rns2rl98-image.image?lk3s=8e244e95&amp;rcl=20260313192839CD2619F58FA81637784A&amp;rrcfp=f06b921b&amp;x-expires=1775993394&amp;x-signature=EkChl%2BjwZONp33NN4UnUl7O9aog%3D" alt="NPC" class="w-8 h-8 mb-1">
+                        <span class="text-sm">伙伴</span>
+                    </button>
+                    <button class="nav-btn flex flex-col items-center py-3 px-6 w-1/5" data-page="timer-page">
+                        <img src="https://p11-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/d0631d9849a74e47b5bb1aa3c5452d0d~tplv-a9rns2rl98-image.image?lk3s=8e244e95&amp;rcl=20260313192839CD2619F58FA81637784A&amp;rrcfp=f06b921b&amp;x-expires=1775993394&amp;x-signature=EkChl%2BjwZONp33NN4UnUl7O9aog%3D" alt="计时" class="w-8 h-8 mb-1">
+                        <span class="text-sm">计时</span>
+                    </button>
+                    <button class="nav-btn flex flex-col items-center py-3 px-6 w-1/5" data-page="shop-page">
+                        <img src="https://p11-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/d0631d9849a74e47b5bb1aa3c5452d0d~tplv-a9rns2rl98-image.image?lk3s=8e244e95&amp;rcl=20260313192839CD2619F58FA81637784A&amp;rrcfp=f06b921b&amp;x-expires=1775993394&amp;x-signature=EkChl%2BjwZONp33NN4UnUl7O9aog%3D" alt="商店" class="w-8 h-8 mb-1">
+                        <span class="text-sm">商店</span>
+                    </button>
+                    <button class="nav-btn flex flex-col items-center py-3 px-6 w-1/5" data-page="profile-page">
+                        <img src="https://p11-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/d0631d9849a74e47b5bb1aa3c5452d0d~tplv-a9rns2rl98-image.image?lk3s=8e244e95&amp;rcl=20260313192839CD2619F58FA81637784A&amp;rrcfp=f06b921b&amp;x-expires=1775993394&amp;x-signature=EkChl%2BjwZONp33NN4UnUl7O9aog%3D" alt="个人中心" class="w-8 h-8 mb-1">
+                        <span class="text-sm">我的</span>
+                    </button>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <script>
+        // 全局数据
+        const appData = {
+            user: {
+                name: '用户',
+                level: 1,
+                coins: 100,
+                taskCompletion: 75,
+                totalFocusTime: 10, // 小时
+                streakDays: 3,
+                focusTime: {
+                    today: 2,
+                    week: 10,
+                    month: 40,
+                    dailyData: [1.5, 2, 2.5, 1, 3, 2, 2] // 最近7天的专注时长
+                }
+            },
+            tasks: [
+                { id: 1, text: '完成数学作业', completed: true },
+                { id: 2, text: '阅读30分钟', completed: false },
+                { id: 3, text: '练习钢琴', completed: false },
+                { id: 4, text: '整理房间', completed: true },
+                { id: 5, text: '准备明天的课程', completed: false }
+            ],
+            checkins: [
+                { id: 1, name: '早起', completed: true },
+                { id: 2, name: '运动', completed: false },
+                { id: 3, name: '阅读', completed: false },
+                { id: 4, name: '冥想', completed: true }
+            ],
+            shopItems: [
+                { id: 1, name: '休闲装', category: 'npc', price: 50, description: '给NPC换上休闲装', image: 'https://p9-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/68483cc02d474a33a415d8c563786beb~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260313192839CD2619F58FA81637784A&rrcfp=f06b921b&x-expires=1775993380&x-signature=vybS5KY9lz1xWrnY6nc%2BG%2B4f7Ik%3D' },
+                { id: 2, name: '雨声增强版', category: 'sound', price: 30, description: '更真实的雨声白噪音', image: 'https://p11-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/d0631d9849a74e47b5bb1aa3c5452d0d~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260313192839CD2619F58FA81637784A&rrcfp=f06b921b&x-expires=1775993394&x-signature=EkChl%2BjwZONp33NN4UnUl7O9aog%3D' },
+                { id: 3, name: '森林主题', category: 'timer', price: 40, description: '森林风格计时器皮肤', image: 'https://p11-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/d0631d9849a74e47b5bb1aa3c5452d0d~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260313192839CD2619F58FA81637784A&rrcfp=f06b921b&x-expires=1775993394&x-signature=EkChl%2BjwZONp33NN4UnUl7O9aog%3D' },
+                { id: 4, name: '商务装', category: 'npc', price: 60, description: '给NPC换上商务装', image: 'https://p9-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/68483cc02d474a33a415d8c563786beb~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260313192839CD2619F58FA81637784A&rrcfp=f06b921b&x-expires=1775993380&x-signature=vybS5KY9lz1xWrnY6nc%2BG%2B4f7Ik%3D' },
+                { id: 5, name: '咖啡馆氛围', category: 'sound', price: 35, description: '温馨的咖啡馆环境音', image: 'https://p11-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/d0631d9849a74e47b5bb1aa3c5452d0d~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260313192839CD2619F58FA81637784A&rrcfp=f06b921b&x-expires=1775993394&x-signature=EkChl%2BjwZONp33NN4UnUl7O9aog%3D' },
+                { id: 6, name: '海洋主题', category: 'timer', price: 45, description: '海洋风格计时器皮肤', image: 'https://p11-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/d0631d9849a74e47b5bb1aa3c5452d0d~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260313192839CD2619F58FA81637784A&rrcfp=f06b921b&x-expires=1775993394&x-signature=EkChl%2BjwZONp33NN4UnUl7O9aog%3D' }
+            ],
+            npcDialogues: {
+                encourage: [
+                    "你做得很好！继续保持！",
+                    "我相信你可以的！",
+                    "每一步都是进步，加油！",
+                    "你已经比昨天更好了！"
+                ],
+                supervise: [
+                    "该专注了哦~",
+                    "时间宝贵，不要浪费哦！",
+                    "集中注意力，你可以的！",
+                    "现在是专注时间，让我们一起努力！"
+                ],
+                chat: [
+                    "今天过得怎么样？",
+                    "有什么有趣的事情发生吗？",
+                    "你有什么想和我分享的吗？",
+                    "我很高兴能和你一起度过这段时间！"
+                ],
+                dress: [
+                    "我喜欢新衣服！谢谢你！",
+                    "这件衣服很适合我，你觉得呢？",
+                    "换新装让我感觉很开心！",
+                    "你真有眼光！"
+                ]
+            },
+            timer: {
+                mode: 'pomodoro', // pomodoro, countdown, stopwatch
+                time: 25 * 60, // 25分钟，单位秒
+                isRunning: false,
+                interval: null,
+                settings: {
+                    pomodoro: 25 * 60,
+                    shortBreak: 5 * 60,
+                    longBreak: 15 * 60
+                }
+            },
+            sound: {
+                current: null,
+                volume: 0.5
+            },
+            diaries: [
+                {
+                    id: 1,
+                    date: '2025-07-20',
+                    content: '今天完成了所有任务，感觉很有成就感！专注学习了2小时，效率很高。'
+                },
+                {
+                    id: 2,
+                    date: '2025-07-19',
+                    content: '今天尝试了新的学习方法，效果不错。需要继续保持专注。'
+                },
+                {
+                    id: 3,
+                    date: '2025-07-18',
+                    content: '有点分心，但还是完成了大部分任务。明天要更加专注！'
+                }
+            ]
+        };
+
+        // DOM加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化页面
+            initHomePage();
+            initTimerPage();
+            initNpcPage();
+            initShopPage();
+            initProfilePage();
+            
+            // 设置导航事件监听
+            setupNavigation();
+            
+            // 设置时间相关功能
+            updateGreeting();
+            setInterval(updateGreeting, 60000); // 每分钟更新一次问候语
+            
+            // 加载Chart.js
+            loadChartJS();
+        });
+        
+        // 加载Chart.js
+        function loadChartJS() {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js';
+            script.onload = function() {
+                // Chart.js加载完成后初始化图表
+                initFocusChart();
+            };
+            document.head.appendChild(script);
+        }
+
+        // 初始化首页
+        function initHomePage() {
+            // 渲染待办事项
+            renderTasks();
+            
+            // 渲染日历
+            renderCalendar();
+            
+            // 渲染打卡项目
+            renderCheckins();
+            
+            // 添加任务相关事件监听
+            document.getElementById('add-task-btn').addEventListener('click', function() {
+                document.getElementById('add-task-form').classList.toggle('hidden');
+                document.getElementById('new-task-input').focus();
+            });
+            
+            document.getElementById('save-task-btn').addEventListener('click', addTask);
+            document.getElementById('cancel-task-btn').addEventListener('click', function() {
+                document.getElementById('add-task-form').classList.add('hidden');
+                document.getElementById('new-task-input').value = '';
+            });
+            
+            document.getElementById('new-task-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addTask();
+                }
+            });
+            
+            // 添加打卡项目相关事件监听
+            document.getElementById('add-checkin-btn').addEventListener('click', function() {
+                document.getElementById('add-checkin-form').classList.toggle('hidden');
+                document.getElementById('new-checkin-input').focus();
+            });
+            
+            document.getElementById('save-checkin-btn').addEventListener('click', addCheckin);
+            document.getElementById('cancel-checkin-btn').addEventListener('click', function() {
+                document.getElementById('add-checkin-form').classList.add('hidden');
+                document.getElementById('new-checkin-input').value = '';
+            });
+            
+            document.getElementById('new-checkin-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addCheckin();
+                }
+            });
+            
+            // 日记相关事件监听
+            document.getElementById('save-diary-btn').addEventListener('click', saveDiary);
+            
+            // 加载今日日记（如果有）
+            loadTodayDiary();
+        }
+
+        // 渲染待办事项
+        function renderTasks() {
+            const todoList = document.getElementById('todo-list');
+            todoList.innerHTML = '';
+            
+            appData.tasks.forEach(task => {
+                const li = document.createElement('li');
+                li.className = 'flex items-center p-3 card-pixel bg-white bg-opacity-70';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'checkbox-pixel mr-3';
+                checkbox.checked = task.completed;
+                checkbox.addEventListener('change', function() {
+                    toggleTask(task.id);
+                });
+                
+                const taskText = document.createElement('span');
+                taskText.className = 'flex-grow';
+                if (task.completed) {
+                    taskText.className += ' line-through text-gray-500';
+                }
+                taskText.textContent = task.text;
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'text-red-500 hover:text-red-700';
+                deleteBtn.innerHTML = '<i class="fa fa-trash"></i>';
+                deleteBtn.addEventListener('click', function() {
+                    deleteTask(task.id);
+                });
+                
+                li.appendChild(checkbox);
+                li.appendChild(taskText);
+                li.appendChild(deleteBtn);
+                todoList.appendChild(li);
+            });
+        }
+
+        // 添加任务
+        function addTask() {
+            const input = document.getElementById('new-task-input');
+            const text = input.value.trim();
+            
+            if (text) {
+                const newTask = {
+                    id: Date.now(),
+                    text: text,
+                    completed: false
+                };
+                
+                appData.tasks.push(newTask);
+                renderTasks();
+                
+                // 重置表单
+                input.value = '';
+                document.getElementById('add-task-form').classList.add('hidden');
+                
+                // 增加金币奖励
+                appData.user.coins += 5;
+                updateCoinsDisplay();
+            }
+        }
+
+        // 切换任务完成状态
+        function toggleTask(id) {
+            const task = appData.tasks.find(t => t.id === id);
+            if (task) {
+                task.completed = !task.completed;
+                renderTasks();
+                
+                // 完成任务奖励
+                if (task.completed) {
+                    appData.user.coins += 10;
+                    updateCoinsDisplay();
+                    
+                    // 更新任务完成率
+                    updateTaskCompletionRate();
+                }
+            }
+        }
+
+        // 删除任务
+        function deleteTask(id) {
+            appData.tasks = appData.tasks.filter(t => t.id !== id);
+            renderTasks();
+        }
+
+        // 更新任务完成率
+        function updateTaskCompletionRate() {
+            if (appData.tasks.length === 0) {
+                appData.user.taskCompletion = 0;
+            } else {
+                const completedTasks = appData.tasks.filter(t => t.completed).length;
+                appData.user.taskCompletion = Math.round((completedTasks / appData.tasks.length) * 100);
+            }
+            
+            // 更新个人中心显示
+            document.getElementById('task-completion').textContent = appData.user.taskCompletion + '%';
+        }
+
+        // 渲染日历
+        function renderCalendar() {
+            const calendar = document.getElementById('calendar');
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = today.getMonth();
+            
+            // 清空日历（保留星期标题）
+            while (calendar.children.length > 7) {
+                calendar.removeChild(calendar.lastChild);
+            }
+            
+            // 获取当月第一天是星期几
+            const firstDay = new Date(year, month, 1).getDay();
+            
+            // 获取当月天数
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            // 添加上个月的占位天数
+            for (let i = 0; i < firstDay; i++) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'p-2 text-gray-400';
+                calendar.appendChild(dayElement);
+            }
+            
+            // 添加当月天数
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'p-2 cursor-pointer hover:bg-primary hover:bg-opacity-30';
+                
+                // 高亮今天
+                if (day === today.getDate()) {
+                    dayElement.className += ' bg-primary font-bold';
+                }
+                
+                dayElement.textContent = day;
+                calendar.appendChild(dayElement);
+            }
+        }
+
+        // 渲染打卡项目
+        function renderCheckins() {
+            const checkinContainer = document.getElementById('checkin-container');
+            checkinContainer.innerHTML = '';
+            
+            appData.checkins.forEach(checkin => {
+                const div = document.createElement('div');
+                div.className = 'card-pixel p-4 text-center cursor-pointer transition-transform hover:scale-105';
+                
+                if (checkin.completed) {
+                    div.className += ' bg-neutral';
+                }
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'checkbox-pixel mx-auto mb-2';
+                checkbox.checked = checkin.completed;
+                checkbox.addEventListener('change', function() {
+                    toggleCheckin(checkin.id);
+                });
+                
+                const name = document.createElement('p');
+                name.className = 'font-bold';
+                name.textContent = checkin.name;
+                
+                div.appendChild(checkbox);
+                div.appendChild(name);
+                checkinContainer.appendChild(div);
+            });
+        }
+
+        // 切换打卡状态
+        function toggleCheckin(id) {
+            const checkin = appData.checkins.find(c => c.id === id);
+            if (checkin) {
+                checkin.completed = !checkin.completed;
+                renderCheckins();
+                
+                // 打卡奖励
+                if (checkin.completed) {
+                    appData.user.coins += 15;
+                    updateCoinsDisplay();
+                    
+                    // 更新连续打卡天数
+                    updateStreakDays();
+                }
+            }
+        }
+
+        // 更新连续打卡天数
+        function updateStreakDays() {
+            // 简单模拟：如果所有打卡项目都完成，增加连续天数
+            const allCompleted = appData.checkins.every(c => c.completed);
+            if (allCompleted) {
+                appData.user.streakDays += 1;
+                document.getElementById('streak-days').textContent = appData.user.streakDays + '天';
+            }
+        }
+
+        // 初始化计时页面
+        function initTimerPage() {
+            // 设置计时模式切换
+            const modeButtons = document.querySelectorAll('.timer-mode-btn');
+            modeButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // 移除所有按钮的active类
+                    modeButtons.forEach(b => b.classList.remove('active'));
+                    // 添加当前按钮的active类
+                    this.classList.add('active');
+                    
+                    // 切换计时模式
+                    const mode = this.dataset.mode;
+                    switchTimerMode(mode);
+                });
+            });
+            
+            // 设置计时器控制按钮
+            document.getElementById('start-timer').addEventListener('click', startTimer);
+            document.getElementById('pause-timer').addEventListener('click', pauseTimer);
+            document.getElementById('reset-timer').addEventListener('click', resetTimer);
+            
+            // 设置倒计时设置
+            document.getElementById('apply-countdown').addEventListener('click', function() {
+                const minutes = parseInt(document.getElementById('countdown-minutes').value) || 0;
+                const seconds = parseInt(document.getElementById('countdown-seconds').value) || 0;
+                
+                if (minutes > 0 || seconds > 0) {
+                    appData.timer.time = minutes * 60 + seconds;
+                    updateTimerDisplay();
+                }
+            });
+            
+            // 设置白噪音按钮
+            const soundButtons = document.querySelectorAll('.sound-btn');
+            soundButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const sound = this.dataset.sound;
+                    toggleSound(sound);
+                    
+                    // 切换按钮样式
+                    soundButtons.forEach(b => {
+                        if (b.dataset.sound === sound) {
+                            b.classList.toggle('active');
+                        } else {
+                            b.classList.remove('active');
+                        }
+                    });
+                });
+            });
+            
+            // 初始化计时器显示
+            updateTimerDisplay();
+        }
+
+        // 切换计时模式
+        function switchTimerMode(mode) {
+            appData.timer.mode = mode;
+            
+            // 重置计时器
+            resetTimer();
+            
+            // 根据模式设置时间和显示
+            switch (mode) {
+                case 'pomodoro':
+                    appData.timer.time = appData.timer.settings.pomodoro;
+                    document.getElementById('timer-label').textContent = '专注时间';
+                    document.getElementById('countdown-settings').classList.add('hidden');
+                    break;
+                case 'countdown':
+                    appData.timer.time = 25 * 60; // 默认25分钟
+                    document.getElementById('timer-label').textContent = '自定义倒计时';
+                    document.getElementById('countdown-settings').classList.remove('hidden');
+                    
+                    // 更新输入框值
+                    document.getElementById('countdown-minutes').value = Math.floor(appData.timer.time / 60);
+                    document.getElementById('countdown-seconds').value = appData.timer.time % 60;
+                    break;
+                case 'stopwatch':
+                    appData.timer.time = 0;
+                    document.getElementById('timer-label').textContent = '正计时';
+                    document.getElementById('countdown-settings').classList.add('hidden');
+                    break;
+            }
+            
+            updateTimerDisplay();
+        }
+
+        // 更新计时器显示
+        function updateTimerDisplay() {
+            const display = document.getElementById('timer-display');
+            const minutes = Math.floor(appData.timer.time / 60);
+            const seconds = appData.timer.time % 60;
+            
+            display.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // 开始计时器
+        function startTimer() {
+            if (!appData.timer.isRunning) {
+                appData.timer.isRunning = true;
+                
+                // 切换按钮显示
+                document.getElementById('start-timer').classList.add('hidden');
+                document.getElementById('pause-timer').classList.remove('hidden');
+                
+                // 设置计时器间隔
+                appData.timer.interval = setInterval(function() {
+                    if (appData.timer.mode === 'stopwatch') {
+                        appData.timer.time += 1;
+                        
+                        // 更新总专注时长
+                        if (appData.timer.time % 60 === 0) { // 每分钟更新一次
+                            appData.user.totalFocusTime += 1/60; // 转换为小时
+                            document.getElementById('total-focus-time').textContent = Math.floor(appData.user.totalFocusTime) + '小时';
+                        }
+                    } else {
+                        appData.timer.time -= 1;
+                        
+                        // 时间到
+                        if (appData.timer.time <= 0) {
+                            timerComplete();
+                            return;
+                        }
+                    }
+                    
+                    updateTimerDisplay();
+                }, 1000);
+            }
+        }
+
+        // 暂停计时器
+        function pauseTimer() {
+            if (appData.timer.isRunning) {
+                appData.timer.isRunning = false;
+                clearInterval(appData.timer.interval);
+                
+                // 切换按钮显示
+                document.getElementById('start-timer').classList.remove('hidden');
+                document.getElementById('pause-timer').classList.add('hidden');
+            }
+        }
+
+        // 重置计时器
+        function resetTimer() {
+            pauseTimer();
+            
+            switch (appData.timer.mode) {
+                case 'pomodoro':
+                    appData.timer.time = appData.timer.settings.pomodoro;
+                    break;
+                case 'countdown':
+                    const minutes = parseInt(document.getElementById('countdown-minutes').value) || 25;
+                    const seconds = parseInt(document.getElementById('countdown-seconds').value) || 0;
+                    appData.timer.time = minutes * 60 + seconds;
+                    break;
+                case 'stopwatch':
+                    appData.timer.time = 0;
+                    break;
+            }
+            
+            updateTimerDisplay();
+        }
+
+        // 计时器完成
+        function timerComplete() {
+            pauseTimer();
+            
+            // 播放提示音（模拟）
+            alert('时间到！');
+            
+            // 奖励金币
+            appData.user.coins += 20;
+            updateCoinsDisplay();
+            
+            // 重置计时器
+            resetTimer();
+        }
+
+        // 切换白噪音
+        function toggleSound(sound) {
+            // 如果当前正在播放相同的声音，则停止
+            if (appData.sound.current === sound) {
+                appData.sound.current = null;
+                // 实际应用中这里会停止播放声音
+                return;
+            }
+            
+            // 切换到新的声音
+            appData.sound.current = sound;
+            // 实际应用中这里会播放新的声音
+        }
+
+        // 初始化NPC页面
+        function initNpcPage() {
+            const actionButtons = document.querySelectorAll('.npc-action-btn');
+            actionButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const action = this.dataset.action;
+                    showNpcDialogue(action);
+                });
+            });
+        }
+
+        // 显示NPC对话
+        function showNpcDialogue(action) {
+            const dialogueElement = document.getElementById('npc-dialogue');
+            const dialogues = appData.npcDialogues[action];
+            
+            if (dialogues && dialogues.length > 0) {
+                // 随机选择一条对话
+                const randomIndex = Math.floor(Math.random() * dialogues.length);
+                const dialogue = dialogues[randomIndex];
+                
+                // 文字渐显效果
+                dialogueElement.style.opacity = '0';
+                setTimeout(() => {
+                    dialogueElement.textContent = dialogue;
+                    dialogueElement.style.opacity = '1';
+                }, 300);
+                
+                // 对话奖励
+                if (action === 'chat') {
+                    appData.user.coins += 5;
+                    updateCoinsDisplay();
+                }
+            }
+        }
+
+        // 初始化商店页面
+        function initShopPage() {
+            // 渲染商品
+            renderShopItems('all');
+            
+            // 设置分类按钮
+            const categoryButtons = document.querySelectorAll('.shop-category-btn');
+            categoryButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // 移除所有按钮的active类
+                    categoryButtons.forEach(b => b.classList.remove('active'));
+                    // 添加当前按钮的active类
+                    this.classList.add('active');
+                    
+                    // 筛选商品
+                    const category = this.dataset.category;
+                    renderShopItems(category);
+                });
+            });
+        }
+
+        // 渲染商品
+        function renderShopItems(category) {
+            const shopItemsContainer = document.getElementById('shop-items');
+            shopItemsContainer.innerHTML = '';
+            
+            const filteredItems = category === 'all' 
+                ? appData.shopItems 
+                : appData.shopItems.filter(item => item.category === category);
+            
+            filteredItems.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'card-pixel p-4 transition-transform hover:scale-105';
+                
+                div.innerHTML = `
+                    <div class="mb-3 h-32 overflow-hidden">
+                        <img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover">
+                    </div>
+                    <h3 class="text-lg font-bold mb-1">${item.name}</h3>
+                    <p class="text-sm text-gray-600 mb-3">${item.description}</p>
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center">
+                            <img src="https://p11-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/d0631d9849a74e47b5bb1aa3c5452d0d~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260313192839CD2619F58FA81637784A&rrcfp=f06b921b&x-expires=1775993394&x-signature=EkChl%2BjwZONp33NN4UnUl7O9aog%3D" alt="金币" class="w-5 h-5 mr-1">
+                            <span>${item.price}</span>
+                        </div>
+                        <button class="buy-btn btn-pixel bg-primary hover:bg-opacity-80 text-sm" data-id="${item.id}">
+                            购买
+                        </button>
+                    </div>
+                `;
+                
+                shopItemsContainer.appendChild(div);
+            });
+            
+            // 添加购买事件监听
+            document.querySelectorAll('.buy-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const itemId = parseInt(this.dataset.id);
+                    buyItem(itemId);
+                });
+            });
+        }
+
+        // 购买商品
+        function buyItem(itemId) {
+            const item = appData.shopItems.find(i => i.id === itemId);
+            
+            if (item && appData.user.coins >= item.price) {
+                // 扣除金币
+                appData.user.coins -= item.price;
+                updateCoinsDisplay();
+                
+                // 显示购买成功消息
+                alert(`购买成功：${item.name}`);
+                
+                // 根据商品类型执行不同操作
+                switch (item.category) {
+                    case 'npc':
+                        // 更换NPC服装（模拟）
+                        showNpcDialogue('dress');
+                        break;
+                    case 'sound':
+                        // 解锁白噪音（模拟）
+                        alert(`已解锁新的白噪音：${item.name}`);
+                        break;
+                    case 'timer':
+                        // 更换计时器皮肤（模拟）
+                        alert(`已更换计时器皮肤：${item.name}`);
+                        break;
+                }
+            } else {
+                alert('金币不足！');
+            }
+        }
+
+        // 初始化个人中心页面
+        function initProfilePage() {
+            // 更新用户信息显示
+            document.getElementById('user-name').textContent = appData.user.name;
+            document.getElementById('user-level').textContent = `等级 ${appData.user.level}`;
+            document.getElementById('profile-coins').textContent = appData.user.coins;
+            document.getElementById('task-completion').textContent = appData.user.taskCompletion + '%';
+            document.getElementById('total-focus-time').textContent = appData.user.totalFocusTime + '小时';
+            document.getElementById('streak-days').textContent = appData.user.streakDays + '天';
+            
+            // 更新专注时长统计
+            document.getElementById('today-focus').textContent = appData.user.focusTime.today + '小时';
+            document.getElementById('week-focus').textContent = appData.user.focusTime.week + '小时';
+            document.getElementById('month-focus').textContent = appData.user.focusTime.month + '小时';
+            
+            // 渲染日记选择器
+            renderDiarySelector();
+            
+            // 添加日记选择事件监听
+            document.getElementById('diary-selector').addEventListener('change', function() {
+                const diaryId = parseInt(this.value);
+                if (diaryId) {
+                    showDiaryContent(diaryId);
+                } else {
+                    document.getElementById('diary-content').innerHTML = '<p class="text-gray-500 text-center">选择一篇日记查看内容</p>';
+                }
+            });
+        }
+        
+        // 初始化专注时长图表
+        function initFocusChart() {
+            const ctx = document.getElementById('focus-chart-canvas').getContext('2d');
+            
+            // 获取最近7天的日期
+            const labels = [];
+            const today = new Date();
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                labels.push(`${date.getMonth() + 1}/${date.getDate()}`);
+            }
+            
+            // 创建图表
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '专注时长（小时）',
+                        data: appData.user.focusTime.dailyData,
+                        backgroundColor: '#a8d8ea',
+                        borderColor: '#77a6b6',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                font: {
+                                    family: 'VT323, monospace'
+                                }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    family: 'VT323, monospace'
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 渲染日记选择器
+        function renderDiarySelector() {
+            const selector = document.getElementById('diary-selector');
+            selector.innerHTML = '<option value="">选择日期</option>';
+            
+            appData.diaries.forEach(diary => {
+                const option = document.createElement('option');
+                option.value = diary.id;
+                option.textContent = diary.date;
+                selector.appendChild(option);
+            });
+        }
+        
+        // 显示日记内容
+        function showDiaryContent(diaryId) {
+            const diary = appData.diaries.find(d => d.id === diaryId);
+            if (diary) {
+                const contentElement = document.getElementById('diary-content');
+                contentElement.innerHTML = `
+                    <div class="mb-2">
+                        <span class="font-bold">日期：</span>
+                        <span>${diary.date}</span>
+                    </div>
+                    <div>
+                        <p>${diary.content.replace(/\n/g, '<br>')}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // 保存日记
+        function saveDiary() {
+            const content = document.getElementById('diary-input').value.trim();
+            if (content) {
+                const today = new Date();
+                const dateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                
+                // 检查是否已有今日日记
+                const existingDiary = appData.diaries.find(d => d.date === dateString);
+                
+                if (existingDiary) {
+                    // 更新现有日记
+                    existingDiary.content = content;
+                } else {
+                    // 创建新日记
+                    const newDiary = {
+                        id: Date.now(),
+                        date: dateString,
+                        content: content
+                    };
+                    appData.diaries.unshift(newDiary);
+                }
+                
+                alert('日记保存成功！');
+                
+                // 如果当前在个人中心页面，更新日记选择器
+                if (!document.getElementById('profile-page').classList.contains('hidden')) {
+                    renderDiarySelector();
+                }
+            } else {
+                alert('请输入日记内容！');
+            }
+        }
+        
+        // 加载今日日记
+        function loadTodayDiary() {
+            const today = new Date();
+            const dateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            
+            const todayDiary = appData.diaries.find(d => d.date === dateString);
+            if (todayDiary) {
+                document.getElementById('diary-input').value = todayDiary.content;
+            }
+        }
+        
+        // 添加打卡项目
+        function addCheckin() {
+            const input = document.getElementById('new-checkin-input');
+            const name = input.value.trim();
+            
+            if (name) {
+                const newCheckin = {
+                    id: Date.now(),
+                    name: name,
+                    completed: false
+                };
+                
+                appData.checkins.push(newCheckin);
+                renderCheckins();
+                
+                // 重置表单
+                input.value = '';
+                document.getElementById('add-checkin-form').classList.add('hidden');
+            }
+        }
+
+        // 设置导航
+        function setupNavigation() {
+            const navButtons = document.querySelectorAll('.nav-btn');
+            navButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const targetPageId = this.dataset.page;
+                    
+                    // 隐藏所有页面
+                    document.querySelectorAll('.page').forEach(page => {
+                        page.classList.add('hidden');
+                    });
+                    
+                    // 显示目标页面
+                    document.getElementById(targetPageId).classList.remove('hidden');
+                    
+                    // 更新导航按钮状态
+                    navButtons.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+        }
+
+        // 更新问候语
+        function updateGreeting() {
+            const greetingElement = document.getElementById('greeting');
+            const now = new Date();
+            const hour = now.getHours();
+            
+            let greeting;
+            if (hour < 6) {
+                greeting = '夜深了，早点休息哦~';
+            } else if (hour < 12) {
+                greeting = '早上好！今天也要加油哦！';
+            } else if (hour < 18) {
+                greeting = '下午好！继续保持专注！';
+            } else {
+                greeting = '晚上好！今天过得怎么样？';
+            }
+            
+            greetingElement.textContent = greeting;
+        }
+
+        // 更新金币显示
+        function updateCoinsDisplay() {
+            document.getElementById('user-coins').textContent = appData.user.coins;
+            document.getElementById('profile-coins').textContent = appData.user.coins;
+        }
+    </script>
+
+</body></html>
